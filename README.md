@@ -5,20 +5,17 @@
 芯位蜜线网课助手是一个基于油猴脚本的自动化学习工具，专门为芯位蜜线网站设计，提供以下核心功能：
 
 ### 🎥 视频播放控制
-- **自动播放**：页面加载后自动开始播放视频
+- **自动播放**：页面加载后自动开始播放视频,章节结束后自动下一章
 - **播放速度调节**：支持0.5x到2x倍速播放
 - **智能暂停恢复**：视频意外暂停时自动恢复播放
 - **播放状态监控**：实时监控视频播放状态
 
 - 倍速和拖动进度条绕不过异步检测，这栏的主要功能就是后台自动下一章
-![image](https://github.com/Quakearea/Beeline-ai/tree/main/images/p1.png)
+- ![image](https://github.com/Quakearea/Beeline-ai/tree/main/images/p1.png)
 
 ### 📝 自动答题功能
-- **智能识别题目**：自动识别页面中的各种题型
-- **随机答案选择**：为选择题随机选择答案
-- **文本答案填充**：为填空题和简答题填充预设答案
-- **答题延迟控制**：可设置答题间隔时间
-![image](https://github.com/Quakearea/Beeline-ai/tree/main/images/p2.png)
+- 支持deepseek自动答题，输入token开启自动答题
+- ![image](https://github.com/Quakearea/Beeline-ai/tree/main/images/p2.png)
 
 ### 📋 作业辅助
 - **自动提交作业**：完成答题后自动提交作业
@@ -118,6 +115,7 @@
 - 承担使用风险
 
 开发者不对使用本工具产生的任何后果承担责任。
+
 
 
 
