@@ -1,19 +1,16 @@
 // ==UserScript==
-// @name         芯位教育全自动刷网课-后台静音播放+AI智能答题
-// @namespace    https://github.com/lingPoint/51xinwei 原作者github
+// @name         芯位教育网课助手
+// @namespace    https://github.com/Quakearea/Beeline-ai
 // @version      3.1.0
 // @description  适配后台播放和默认静音;适配新版UI；新增DeepSeek AI智能答题功能；优化已答题检测，避免重复答题；主要功能：芯位教育自动播放下一课，跳过作业、文档、问卷，智能答题自动提交；专注于帮助大学生从网课中释放出来 让自己的时间把握在自己的手中。
-// @author       Zerox & AI Assistant
+// @author       Quakearea
 // @match        *://*.beeline-ai.com/*
 // @icon         *://*.beeline-ai.com/*
 // @grant        none
 // @run-at document-end
 // @license GPL-3.0 license
-// @downloadURL https://update.greasyfork.org/scripts/454886/%E8%8A%AF%E4%BD%8D%E6%95%99%E8%82%B2%E5%85%A8%E8%87%AA%E5%8A%A8%E5%88%B7%E7%BD%91%E8%AF%BE-%E5%90%8E%E5%8F%B0%E9%9D%99%E9%9F%B3%E6%92%AD%E6%94%BE.user.js
-// @updateURL https://update.greasyfork.org/scripts/454886/%E8%8A%AF%E4%BD%8D%E6%95%99%E8%82%B2%E5%85%A8%E8%87%AA%E5%8A%A8%E5%88%B7%E7%BD%91%E8%AF%BE-%E5%90%8E%E5%8F%B0%E9%9D%99%E9%9F%B3%E6%92%AD%E6%94%BE.meta.js
 // ==/UserScript==
 
-// 在您的现有代码中添加这个函数
 function addFullscreenErrorHandler() {
     // 捕获全屏操作错误
     const originalExitFullscreen = Document.prototype.exitFullscreen;
@@ -818,12 +815,6 @@ function main() {
     }
 
 }
-
-// 修改定时器，增加启用控件的功能
-//setInterval(function () {
-//    main()
-//    mute()
-//}, 1000);
 
 // 添加MutationObserver监听，当DOM变化时重新启用控件
 function handler(mutationRecordList) {
@@ -1785,4 +1776,5 @@ function stopAutoAnswer() {
         answerInterval = null;
     }
 }
+
 
