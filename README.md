@@ -93,6 +93,10 @@
 - 建议在Chrome或Edge浏览器中使用以获得最佳体验
 - 脚本会定期更新以适配网站变化
 
+### 赞助
+- 如果您喜欢本脚本并希望支持作者，可以通过以下方式赞助：
+![image](https://github.com/Quakearea/Beeline-ai/tree/main/images/wx.png)
+![image](https://github.com/Quakearea/Beeline-ai/tree/main/images/zfb.png)
 ## 更新日志
 
 ### v1.0.0 (2025-10-15)
@@ -112,5 +116,6 @@
 - 承担使用风险
 
 开发者不对使用本工具产生的任何后果承担责任。
+
 
 
