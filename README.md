@@ -11,10 +11,10 @@
 - **播放状态监控**：实时监控视频播放状态
 
 - 倍速和拖动进度条绕不过异步检测，这栏的主要功能就是后台自动下一章
-- <img src="https://github.com/Quakearea/Beeline-ai/tree/main/images/p1.png" alt="image" width="600"/>
+- <img src="images/p1.png" alt="image" width="400"/>
 ### 📝 自动答题功能
 - 支持deepseek自动答题，输入token开启自动答题
-- <img src="https://github.com/Quakearea/Beeline-ai/tree/main/images/p2.png" alt="image" width="600"/>
+- <img src="images/p2.png" alt="image" width="400"/>
 
 ### 📋 作业辅助
 - **自动提交作业**：完成答题后自动提交作业
@@ -93,8 +93,7 @@
 
 ### 赞助
 - 如果您喜欢本脚本并希望支持作者，可以通过以下方式赞助：
-- <img src="https://github.com/Quakearea/Beeline-ai/tree/main/images/wx.jpg" alt="image" width="600"/>
-<img src="https://github.com/Quakearea/Beeline-ai/tree/main/images/zfb.jpg" alt="image" width="600"/>
+- <img src="images/wx.jpg" alt="image" width="300"/><img src="images/zfb.jpg" alt="image" width="300"/>
 
 ## 更新日志
 
@@ -115,6 +114,7 @@
 - 承担使用风险
 
 开发者不对使用本工具产生的任何后果承担责任。
+
 
 
 
