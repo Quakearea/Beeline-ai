@@ -1,4 +1,4 @@
-# 芯位蜜线网课助手使用说明
+# 芯位蜜线/芯位教育网课助手使用说明
 
 ## 功能介绍
 
@@ -32,6 +32,7 @@
 - Chrome浏览器：安装 [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
 - Firefox浏览器：安装 [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/)
 - Edge浏览器：安装 [Tampermonkey](https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd)
+- 安装完后打开浏览器开发者模式
 
 ### 2. 安装脚本
 1. 打开油猴插件管理页面
@@ -80,7 +81,7 @@
 4. **数据安全**：脚本不会收集或上传任何个人信息
 
 ### 🔧 故障排除
-1. **脚本不生效**：检查油猴插件是否启用，脚本是否激活
+1. **脚本不生效**：检查油猴插件是否启用，脚本是否激活，浏览器开发者模式是否开启
 2. **视频无法播放**：检查网站是否支持自动播放，尝试手动点击播放
 3. **答题失败**：可能是页面结构变化，尝试刷新页面或联系开发者
 4. **通知不显示**：检查浏览器通知权限设置
@@ -92,7 +93,7 @@
 
 ## 更新日志
 
-### v1.0.0 (2024-01-01)
+### v1.0.0 (2025-10-15)
 - ✨ 初始版本发布
 - 🎥 实现视频自动播放功能
 - 📝 实现自动答题功能
@@ -109,3 +110,4 @@
 - 承担使用风险
 
 开发者不对使用本工具产生的任何后果承担责任。
+
