@@ -1206,8 +1206,10 @@ function initSmartAnswer() {
 // 随机选择答案（单选题）
 function randomSelectAnswer() {
     try {
-        // 检查是否已经答过此题（随机模式通常不需要检查，但为了统一也可以加上）
-        if (isQuestionAnswered()) {
+        // 判断题与单选题：若已选择则跳过；多选题不跳过
+        const typeTag = document.querySelector('.tag');
+        const qType = typeTag ? typeTag.textContent.trim() : '';
+        if ((qType === '单选题' || qType === '判断题') && isQuestionAnswered()) {
             console.log('当前题目已答，跳过');
             showAnswerTip('已答题，跳过', 'info');
             return true;
@@ -1216,6 +1218,7 @@ function randomSelectAnswer() {
         // 检查是否在答题页面
         const radioGroup = document.querySelector('.el-radio-group');
         const checkboxGroup = document.querySelector('.el-checkbox-group');
+        const textarea = document.querySelector('textarea, .el-textarea__inner');
         
         if (radioGroup) {
             // 单选题
@@ -1253,18 +1256,38 @@ function randomSelectAnswer() {
                     }
                 }
                 
+                const targets = [];
                 selectedIndexes.forEach(index => {
                     const checkbox = checkboxes[index];
-                    const checkboxInput = checkbox.querySelector('input[type="checkbox"]');
-                    if (checkboxInput && !checkboxInput.checked) {
-                        checkboxInput.click();
+                    const input = checkbox.querySelector('input.el-checkbox__original');
+                    const inner = checkbox.querySelector('.el-checkbox__inner');
+                    const alreadyChecked = checkbox.classList.contains('is-checked') || (input && input.checked);
+                    if (!alreadyChecked) {
+                        targets.push(inner || input || checkbox);
                     }
+                });
+
+                targets.forEach((el, idx) => {
+                    setTimeout(() => {
+                        try { el.click(); } catch(e) {}
+                    }, idx * 500);
                 });
                 
                 console.log('已随机选择多选题答案，共选择', numToSelect, '个选项');
                 showAnswerTip(`已选择 ${numToSelect} 个选项`, 'success');
                 return true;
             }
+        } else if (textarea) {
+            // 简答题：随机填充占位文本
+            const fillers = ['略。', '参考教材相关章节内容。', '因题意而定。', '请见课程讲义要点。'];
+            const text = fillers[Math.floor(Math.random() * fillers.length)];
+            const inputEvent = new Event('input', { bubbles: true });
+            const changeEvent = new Event('change', { bubbles: true });
+            textarea.value = text;
+            textarea.dispatchEvent(inputEvent);
+            textarea.dispatchEvent(changeEvent);
+            showAnswerTip('已填写简答题占位答案', 'info');
+            return true;
         } else {
             console.log('未找到题目，可能不在答题页面');
             showAnswerTip('未找到题目', 'warning');
@@ -1530,6 +1553,16 @@ function isQuestionAnswered() {
             }
         }
 
+        // 检查简答题（主观题）：wangEditor 或 textarea 是否有内容
+        const editor = document.querySelector('[contenteditable="true"][role="textarea"]');
+        if (editor && editor.textContent.trim().length > 0) {
+            return true;
+        }
+        const textArea = document.querySelector('textarea, .el-textarea__inner');
+        if (textArea && (textArea.value || '').trim().length > 0) {
+            return true;
+        }
+
         return false;
     } catch (error) {
         console.error('检查答题状态失败:', error);
@@ -1545,13 +1578,6 @@ async function aiSelectAnswer() {
             return false;
         }
 
-        // 检查是否已经答过此题
-        if (isQuestionAnswered()) {
-            console.log('当前题目已答，跳过');
-            showAnswerTip('已答题，跳过', 'info');
-            return true; // 返回true表示可以继续下一题
-        }
-
         // 获取题目内容
         const questionData = getCurrentQuestion();
         if (!questionData) {
@@ -1559,19 +1585,37 @@ async function aiSelectAnswer() {
             return false;
         }
 
+        // 对于单选题和判断题，如果已选择则跳过；多选题不跳过，允许继续补全其他选项
+        if ((questionData.type === '单选题' || questionData.type === '判断题') && isQuestionAnswered()) {
+            console.log('当前题目已答，跳过');
+            showAnswerTip('已答题，跳过', 'info');
+            return true;
+        }
+
         showAnswerTip('AI思考中...', 'info');
 
         // 构建提示词
-        let prompt = `请分析以下题目并给出正确答案。只需要回答选项字母（如A、B、C、D），不要解释。\n\n`;
-        prompt += `题目类型: ${questionData.type}\n`;
-        prompt += `问题: ${questionData.question}\n\n`;
-        prompt += `选项:\n`;
-        questionData.options.forEach(opt => {
-            prompt += `${opt.label}: ${opt.text}\n`;
-        });
-        
-        if (questionData.type === '多选题') {
-            prompt += `\n这是多选题，如果有多个正确答案，请用逗号分隔（如：A,C,D）`;
+        let prompt = '';
+        if (questionData.type === '简答题' || questionData.type === '主观题') {
+            prompt += `以下是一道主观题，请用中文直接给出简洁准确的答案，50-150字，不要添加任何前缀、编号或解释：\n\n`;
+            prompt += `问题: ${questionData.question}\n`;
+        } else if (questionData.type === '判断题') {
+            prompt += `以下是一个判断题，请只回答“对”或“错”，不要解释：\n\n`;
+            prompt += `问题: ${questionData.question}\n`;
+            if (questionData.options && questionData.options.length) {
+                prompt += `选项: ${questionData.options.map(o => `${o.label}:${o.text}`).join('，')}\n`;
+            }
+        } else {
+            prompt += `请分析以下题目并给出正确答案。只需要回答选项字母（如A、B、C、D），不要解释。\n\n`;
+            prompt += `题目类型: ${questionData.type}\n`;
+            prompt += `问题: ${questionData.question}\n\n`;
+            prompt += `选项:\n`;
+            questionData.options.forEach(opt => {
+                prompt += `${opt.label}: ${opt.text}\n`;
+            });
+            if (questionData.type === '多选题') {
+                prompt += `\n这是多选题，如果有多个正确答案，请用逗号分隔（如：A,C,D）`;
+            }
         }
 
         // 调用DeepSeek API
@@ -1601,6 +1645,18 @@ async function aiSelectAnswer() {
         
         console.log('AI答案:', aiAnswer);
 
+        // 简答题：直接填空
+        if (questionData.type === '简答题' || questionData.type === '主观题') {
+            const filled = await fillShortAnswer(aiAnswer);
+            if (filled) {
+                showAnswerTip('AI已填写答案', 'success');
+                return true;
+            } else {
+                showAnswerTip('填写简答题失败', 'error');
+                return false;
+            }
+        }
+
         // 解析AI返回的答案并选择
         const success = selectAnswerByAI(aiAnswer, questionData.type);
         
@@ -1624,11 +1680,20 @@ function getCurrentQuestion() {
     try {
         // 获取题目类型
         const typeTag = document.querySelector('.tag');
-        const questionType = typeTag ? typeTag.textContent.trim() : '';
+        let questionType = typeTag ? typeTag.textContent.trim() : '';
 
         // 获取题目内容
-        const questionElem = document.querySelector('.topic-title');
-        const questionText = questionElem ? questionElem.textContent.trim() : '';
+        let questionText = '';
+        const questionElem1 = document.querySelector('.topic-title');
+        if (questionElem1 && questionElem1.textContent) {
+            questionText = questionElem1.textContent.trim();
+        }
+        if (!questionText) {
+            const questionElem2 = document.querySelector('.question .content p, .question .content');
+            if (questionElem2 && questionElem2.textContent) {
+                questionText = questionElem2.textContent.trim();
+            }
+        }
 
         if (!questionText) {
             return null;
@@ -1637,7 +1702,7 @@ function getCurrentQuestion() {
         // 获取选项
         const options = [];
         
-        if (questionType === '单选题') {
+        if (questionType === '单选题' || questionType === '判断题') {
             const radioGroup = document.querySelector('.el-radio-group');
             if (radioGroup) {
                 const radios = radioGroup.querySelectorAll('.el-radio');
@@ -1657,6 +1722,13 @@ function getCurrentQuestion() {
                     options.push({ label, text });
                 });
             }
+        } else if (questionType === '简答题' || questionType === '主观题' || document.querySelector('textarea') || document.querySelector('[contenteditable="true"][role="textarea"]')) {
+            // 主观题/简答题：无需选项，后续用AI文本填入
+            return {
+                type: questionType || '主观题',
+                question: questionText,
+                options: []
+            };
         }
 
         return {
@@ -1674,6 +1746,30 @@ function getCurrentQuestion() {
 // 根据AI答案选择选项
 function selectAnswerByAI(aiAnswer, questionType) {
     try {
+        // 判断题：解析“对/错/正确/错误/True/False”
+        if (questionType === '判断题') {
+            const normalized = aiAnswer.replace(/\s/g, '').toLowerCase();
+            const isTrue = /^(对|正确|true|t|yes|y)$/i.test(normalized);
+            const isFalse = /^(错|错误|false|f|no|n)$/i.test(normalized);
+            const radioGroup = document.querySelector('.el-radio-group');
+            if (!radioGroup) return false;
+            const radios = radioGroup.querySelectorAll('.el-radio');
+            for (let radio of radios) {
+                const text = (radio.querySelector('.label')?.textContent || radio.textContent || '').trim();
+                const chooseTrue = /对|正确|true/i.test(text);
+                const chooseFalse = /错|错误|false/i.test(text);
+                if ((isTrue && chooseTrue) || (isFalse && chooseFalse)) {
+                    const input = radio.querySelector('input[type="radio"]');
+                    if (input) { input.click(); return true; }
+                }
+            }
+            // 如果没有匹配到，通过索引选择：一般A=对，B=错
+            const fallbackIndex = isTrue ? 0 : 1;
+            const fb = radios[fallbackIndex]?.querySelector('input[type="radio"]');
+            if (fb) { fb.click(); return true; }
+            return false;
+        }
+
         // 提取答案中的字母（支持多种格式）
         const answerMatch = aiAnswer.match(/[A-Z]/gi);
         if (!answerMatch) {
@@ -1702,26 +1798,121 @@ function selectAnswerByAI(aiAnswer, questionType) {
             const checkboxGroup = document.querySelector('.el-checkbox-group');
             if (checkboxGroup) {
                 const checkboxes = checkboxGroup.querySelectorAll('.el-checkbox');
-                let selectedCount = 0;
-                
+                const targets = [];
+
                 checkboxes.forEach(checkbox => {
                     const label = checkbox.querySelector('.index-name')?.textContent.trim();
                     if (selectedOptions.includes(label)) {
-                        const checkboxInput = checkbox.querySelector('input[type="checkbox"]');
-                        if (checkboxInput && !checkboxInput.checked) {
-                            checkboxInput.click();
-                            selectedCount++;
+                        const input = checkbox.querySelector('input.el-checkbox__original');
+                        const inner = checkbox.querySelector('.el-checkbox__inner');
+                        const alreadyChecked = checkbox.classList.contains('is-checked') || (input && input.checked);
+                        if (!alreadyChecked) {
+                            targets.push(inner || input || checkbox);
                         }
                     }
                 });
-                
-                return selectedCount > 0;
+
+                // 依次点击，每次间隔0.5s
+                targets.forEach((el, idx) => {
+                    setTimeout(() => {
+                        try { el.click(); } catch(e) {}
+                    }, idx * 500);
+                });
+
+                return targets.length > 0;
             }
         }
 
         return false;
     } catch (error) {
         console.error('选择答案失败:', error);
+        return false;
+    }
+}
+
+// 填写简答题答案
+async function fillShortAnswer(answerText) {
+    try {
+        let target = document.querySelector('[contenteditable="true"][role="textarea"]');
+        if (target) {
+            try { target.click(); } catch (e) {}
+            target.focus();
+            const rect = target.getBoundingClientRect();
+            const cx = Math.floor(rect.left + rect.width / 2);
+            const cy = Math.floor(rect.top + rect.height / 2);
+            try { target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: cx, clientY: cy })); } catch (e) {}
+            try { target.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, clientX: cx, clientY: cy })); } catch (e) {}
+            try { target.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: cx, clientY: cy })); } catch (e) {}
+            const sel = window.getSelection && window.getSelection();
+            if (sel) {
+                try {
+                    sel.removeAllRanges();
+                    const range = document.createRange();
+                    range.selectNodeContents(target);
+                    range.collapse(false);
+                    sel.addRange(range);
+                    try { document.dispatchEvent(new Event('selectionchange')); } catch (e) {}
+                } catch (e) {}
+            }
+            await new Promise(r => setTimeout(r, 50));
+            let okSpace = false;
+            try { okSpace = document.execCommand('insertText', false, ' '); } catch (e) { okSpace = false; }
+            await new Promise(r => setTimeout(r, 10));
+            try { document.execCommand('delete', false, null); } catch (e) {}
+            try {
+                const beforeInput = new InputEvent('beforeinput', { inputType: 'insertText', data: answerText, bubbles: true });
+                target.dispatchEvent(beforeInput);
+            } catch (e) {}
+            let ok = false;
+            try { ok = document.execCommand('insertText', false, answerText); } catch (e) { ok = false; }
+            if (!ok) {
+                try {
+                    const s = window.getSelection && window.getSelection();
+                    if (s && s.rangeCount) {
+                        const r = s.getRangeAt(0);
+                        r.deleteContents();
+                        r.insertNode(document.createTextNode(answerText));
+                    } else {
+                        target.textContent = '';
+                        target.appendChild(document.createTextNode(answerText));
+                    }
+                } catch (e) {}
+            }
+            try {
+                const inputEvent = new InputEvent('input', { data: answerText, bubbles: true });
+                target.dispatchEvent(inputEvent);
+            } catch (e) {
+                try {
+                    const inputEvent = new Event('input', { bubbles: true });
+                    target.dispatchEvent(inputEvent);
+                } catch (err) {}
+            }
+            try {
+                const changeEvent = new Event('change', { bubbles: true });
+                target.dispatchEvent(changeEvent);
+            } catch (e) {}
+            return true;
+        }
+
+        const textarea = document.querySelector('textarea, .el-textarea__inner');
+        if (textarea) {
+            try { textarea.click(); } catch (e) {}
+            textarea.focus();
+            try { textarea.select(); } catch (e) {}
+            textarea.value = answerText;
+            try {
+                const inputEvent = new Event('input', { bubbles: true });
+                textarea.dispatchEvent(inputEvent);
+            } catch (e) {}
+            try {
+                const changeEvent = new Event('change', { bubbles: true });
+                textarea.dispatchEvent(changeEvent);
+            } catch (e) {}
+            return true;
+        }
+
+        return false;
+    } catch (e) {
         return false;
     }
 }
